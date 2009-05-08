@@ -6,13 +6,13 @@ class TestApacheLookup < Test::Unit::TestCase
     @test_log = StringIO.new(File.read('./test/test_log.txt'))
     cache = YAML.load_file('test/cache.yml')
     
+    @apache = ApacheLookup.new cache
+    
     # Aliasing Resolv.getname in the test to return predictable result from any ip
     Resolv.class_eval('alias :getname_orig :getname')
     def Resolv.getname ip
       ip.gsub('.', '') + '.com'
     end
-    
-    @apache = ApacheLookup.new cache
     # @test_log.each_line {|line| puts "#{@test_log.lineno}: #{line}"}
   end
   

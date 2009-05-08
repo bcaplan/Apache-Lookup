@@ -13,11 +13,16 @@ class ApacheLookup
   end
   
   def resolve_ip ip_address
-    unless @cache[ip_address] && Time.parse(@cache[ip_address][:mtime]) < Time.now + EXPIRATION
+    if @cache[ip_address].nil? || Time.parse(@cache[ip_address][:mtime]) < Time.now + EXPIRATION
+      @cache[ip_address] = Hash.new
       @cache[ip_address][:url] = Resolv.getname ip_address
       @cache[ip_address][:mtime] = Time.now
-    else
-      @cache[ip_address]
     end
+    @cache[ip_address][:url]
+  end
+  
+  def self.run
+    cache = 'file'
+    ApacheLookup.new cache
   end
 end
