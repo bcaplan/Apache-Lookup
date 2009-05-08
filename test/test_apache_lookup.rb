@@ -11,7 +11,7 @@ end
 
 class TestApacheLookup < Test::Unit::TestCase
   def setup
-    @test_log = StringIO.new(File.read('./test/test_log.txt'))
+    @test_log = StringIO.new(File.read('./test/small_log.txt'))
     @test_line = '208.77.188.166 - - [29/Apr/2009:16:07:38 -0700] "GET / HTTP/1.1" 200 1342'
     cache = YAML.load_file('test/cache.yml')
 
@@ -19,7 +19,7 @@ class TestApacheLookup < Test::Unit::TestCase
     # @test_log.each_line {|line| puts "#{@test_log.lineno}: #{line}"}
   end
 
-  # resolve_ip tests
+  # resolve_ip and cache tests
   def test_pulls_from_cache_if_in_cache_and_not_expired
     actual = @apache.resolve_ip '1.1.1.1'
 
@@ -58,20 +58,21 @@ class TestApacheLookup < Test::Unit::TestCase
 
     assert_equal Time.now.to_s, actual
   end
+  # End testing cache
 
-  # parse_line tests
   def test_parses_ip_and_replaces
     expected = '20877188166.com - - [29/Apr/2009:16:07:38 -0700] "GET / HTTP/1.1" 200 1342'
     actual = @apache.parse_line(@test_line)
-    
+
     assert_equal expected, actual
   end
 
-  # def test_finds_and_stores_ips_and_lines
-  #   expected = { '208.77.188.166' => [0, 4, 7], '75.119.201.189' => []}
-  #   actual = ApacheLookup.gather @test_log
-  # 
-  # 
-  #   assert_equal expected, actual
-  # end
+  def test_creates_array_from_log_lines
+    expected = ['208.77.188.166 - - [29/Apr/2009:16:07:38 -0700] "GET / HTTP/1.1" 200 1342',
+                '75.119.201.189 - - [29/Apr/2009:16:07:44 -0700] "GET /favicon.ico HTTP/1.1" 200 1406']
+
+    @apache.read_log @test_log
+
+    assert_equal expected, @apache.log_lines
+  end
 end
