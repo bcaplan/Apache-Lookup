@@ -5,6 +5,11 @@ class TestApacheLookup < Test::Unit::TestCase
   def setup
     @test_log = StringIO.new(File.read('./test/test_log.txt'))
     @cache = YAML.load_file('./test/cache.yml')
+    
+    Resolv.class_eval('alias :getname_orig, :getname')
+    def Resolv.getname ip
+      domain = ip.gsub('.', '') + '.com'
+    end
     # @test_log.each_line {|line| puts "#{@test_log.lineno}: #{line}"}
   end
   
