@@ -1,21 +1,25 @@
 require "test/unit"
 require "apache_lookup"
 
+# Mocking Resolv.getname
+class Resolv
+  alias :getname_orig :getname
+  def self.getname ip
+    ip.gsub('.', '') + '.com'
+  end
+end
+
 class TestApacheLookup < Test::Unit::TestCase
   def setup
     @test_log = StringIO.new(File.read('./test/test_log.txt'))
+    @test_line = '208.77.188.166 - - [29/Apr/2009:16:07:38 -0700] "GET / HTTP/1.1" 200 1342'
     cache = YAML.load_file('test/cache.yml')
 
     @apache = ApacheLookup.new cache
-
-    # Aliasing Resolv.getname in the test to return predictable result from any ip
-    Resolv.class_eval('alias :getname_orig :getname')
-    def Resolv.getname ip
-      ip.gsub('.', '') + '.com'
-    end
     # @test_log.each_line {|line| puts "#{@test_log.lineno}: #{line}"}
   end
 
+  # resolve_ip tests
   def test_pulls_from_cache_if_in_cache_and_not_expired
     actual = @apache.resolve_ip '1.1.1.1'
 
@@ -49,11 +53,18 @@ class TestApacheLookup < Test::Unit::TestCase
   end
 
   def test_updates_mtime_when_cache_updated
-    before = Time.parse(@apache.cache['1.1.1.3'][:mtime])
     @apache.resolve_ip '1.1.1.3'
-    after = Time.parse(@apache.cache['1.1.1.3'][:mtime])
+    actual = @apache.cache['1.1.1.3'][:mtime]
 
-    assert before < after
+    assert_equal Time.now.to_s, actual
+  end
+
+  # parse_line tests
+  def test_parses_ip_and_replaces
+    expected = '20877188166.com - - [29/Apr/2009:16:07:38 -0700] "GET / HTTP/1.1" 200 1342'
+    actual = @apache.parse_line(@test_line)
+    
+    assert_equal expected, actual
   end
 
   # def test_finds_and_stores_ips_and_lines
