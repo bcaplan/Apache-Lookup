@@ -26,7 +26,9 @@ class ApacheLookup
   end
 
   def read_log log
-    
+    log.each_line do |line|
+      @log_lines << line.chomp
+    end
   end
 
   def parse_line line
