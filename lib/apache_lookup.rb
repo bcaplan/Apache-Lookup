@@ -9,10 +9,9 @@ class ApacheLookup
   CACHE_PATH = ''
   IP_REGEX = /^((\d{1,3}\.){3}\d{1,3})\s/
 
-  attr_accessor :cache, :log_lines
-
-  def initialize cache
+  def initialize cache, thread_num = 20
     @cache = cache
+    @thread_num = thread_num
     @log_lines = Array.new
   end
 
@@ -33,12 +32,15 @@ class ApacheLookup
 
   def parse_line line
     line =~ IP_REGEX
-    resolved = resolve_ip($1)
-    line.gsub($1, resolved)
+    line.gsub($1, resolve_ip($1))
+  end
+  
+  def parse_log
+    
   end
 
   def self.run
     cache = YAML.load_file CACHE_PATH
-    ApacheLookup.new cache
+    @apache = ApacheLookup.new cache
   end
 end

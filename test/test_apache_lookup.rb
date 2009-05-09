@@ -9,6 +9,11 @@ class Resolv
   end
 end
 
+# Add accessors so we can verify info in tests
+class ApacheLookup
+  attr_accessor :cache, :log_lines
+end
+
 class TestApacheLookup < Test::Unit::TestCase
   def setup
     @test_log = StringIO.new(File.read('./test/small_log.txt'))
@@ -72,6 +77,16 @@ class TestApacheLookup < Test::Unit::TestCase
                 '75.119.201.189 - - [29/Apr/2009:16:07:44 -0700] "GET /favicon.ico HTTP/1.1" 200 1406']
 
     @apache.read_log @test_log
+
+    assert_equal expected, @apache.log_lines
+  end
+
+  def test_parses_log
+    @apache.read_log @test_log
+    @apache.parse_log
+
+    expected = ['20877188166.com - - [29/Apr/2009:16:07:38 -0700] "GET / HTTP/1.1" 200 1342',
+                '75119201189.com - - [29/Apr/2009:16:07:44 -0700] "GET /favicon.ico HTTP/1.1" 200 1406']
 
     assert_equal expected, @apache.log_lines
   end
