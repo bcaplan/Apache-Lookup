@@ -1,6 +1,8 @@
 require "test/unit"
 require "apache_lookup"
 
+
+
 # Mocking Resolv.getname
 class Resolv
   alias :getname_orig :getname
@@ -16,6 +18,8 @@ end
 
 class TestApacheLookup < Test::Unit::TestCase
   def setup
+    $stdout = StringIO.new
+
     @test_log = StringIO.new(File.read('./test/small_log.txt'))
     @test_line = '208.77.188.166 - - [29/Apr/2009:16:07:38 -0700] "GET / HTTP/1.1" 200 1342'
     cache = YAML.load_file('test/cache.yml')

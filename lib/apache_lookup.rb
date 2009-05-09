@@ -2,10 +2,12 @@ require 'resolv'
 require 'thread'
 require 'yaml'
 require 'time'
+require 'timeout'
 
 class ApacheLookup
   VERSION = '1.0.0'
   EXPIRATION = 1000000
+  TIMEOUT = 0.5
   CACHE_PATH = 'cache.yml'
   IP_REGEX = /^((\d{1,3}\.){3}\d{1,3})\s/
 
@@ -21,13 +23,17 @@ class ApacheLookup
   def resolve_ip ip_address
     if @cache[ip_address].nil? || @cache[ip_address][:mtime].nil? || Time.parse(@cache[ip_address][:mtime]) < Time.now - EXPIRATION
       @cache[ip_address] = Hash.new
+
       begin
-        resolved = Resolv.getname ip_address
-        @cache[ip_address][:url] = Resolv.getname ip_address
-      rescue
+        timeout(TIMEOUT) do
+          @cache[ip_address][:url] = Resolv.getname ip_address
+        end
+      rescue Resolv::ResolvError, Resolv::ResolvTimeout, Timeout::Error
         @cache[ip_address][:url] = ip_address
       end
+
       @cache[ip_address][:mtime] = Time.now.to_s
+
     end
     @cache[ip_address][:url]
   end
@@ -39,12 +45,15 @@ class ApacheLookup
   end
 
   def parse_line line
-    # @count += 1
-    # print "#{@count} "
-    # STDOUT.flush
+    @count += 1
+    print "\rProcessed: #{@count}"
+    STDOUT.flush
     line =~ IP_REGEX
-    puts $1.to_s.inspect
-    line.gsub!($1, resolve_ip($1))
+    # puts $1.to_s.inspect
+    # begin
+      line.gsub!($1, resolve_ip($1))
+    # rescue TypeError
+    # end
   end
 
   def parse_log number_of_threads = @thread_limit
