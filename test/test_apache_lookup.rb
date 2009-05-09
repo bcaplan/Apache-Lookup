@@ -1,8 +1,6 @@
 require "test/unit"
 require "apache_lookup"
 
-
-
 # Mocking Resolv.getname
 class Resolv
   alias :getname_orig :getname
@@ -93,4 +91,13 @@ class TestApacheLookup < Test::Unit::TestCase
 
     assert_equal expected, @apache.log_lines
   end
+  
+  def test_writes_to_file
+    FileUtils.touch('test/tmp.txt')
+    @apache.write_file('test/tmp.txt', [1, 2, 3, 4])
+    
+    actual = File.read('test/tmp.txt')
+    
+    assert_equal "1\n2\n3\n4\n", actual
+  end  
 end

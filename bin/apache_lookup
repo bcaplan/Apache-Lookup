@@ -1,3 +1,9 @@
 #!/usr/bin/env ruby
 
-abort "you need to write me"
+require '../lib/apache_lookup'
+
+if ARGV[0] == '-t'
+  ApacheLookup.run(ARGV[1], ARGV[2])
+else
+  ApacheLookup.run(ApacheLookup::DEFAULT_THREADS, ARGV[0])
+end
