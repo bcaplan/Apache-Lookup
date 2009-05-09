@@ -21,7 +21,6 @@ class TestApacheLookup < Test::Unit::TestCase
     cache = YAML.load_file('test/cache.yml')
 
     @apache = ApacheLookup.new cache, './test/small_log.txt'
-    # @test_log.each_line {|line| puts "#{@test_log.lineno}: #{line}"}
   end
 
   # resolve_ip and cache tests
