@@ -6,12 +6,13 @@ require 'time'
 class ApacheLookup
   VERSION = '1.0.0'
   EXPIRATION = 1000000
-  CACHE_PATH = ''
+  CACHE_PATH = 'cache.yml'
   IP_REGEX = /^((\d{1,3}\.){3}\d{1,3})\s/
 
-  def initialize cache, thread_limit = 20
+  def initialize cache, path, thread_limit = 20
     @cache = cache
-    @thread_limit = thread_limit
+    @file = File.new(path)
+    @thread_limit = thread_limit.to_i
     @log_lines = Array.new
     @queue = Queue.new
     @thread_pool = Array.new
@@ -26,8 +27,9 @@ class ApacheLookup
     @cache[ip_address][:url]
   end
 
-  def read_log log
+  def read_log log = @file
     log.each_line do |line|
+      puts line
       @log_lines << line.chomp
     end
   end
@@ -37,7 +39,7 @@ class ApacheLookup
     line.gsub!($1, resolve_ip($1))
   end
   
-  def parse_log number_of_threads
+  def parse_log number_of_threads = @thread_limit
     @log_lines.each do |line|
       @queue << line
     end
@@ -51,10 +53,15 @@ class ApacheLookup
     }
     
     @thread_pool.each { |t| t.join }
+    @log_lines.each { |line| puts line }
   end
 
-  def self.run
+  def self.run threads, path
     cache = YAML.load_file CACHE_PATH
-    @apache = ApacheLookup.new cache
+    @apache = ApacheLookup.new cache, path, threads
+    @apache.read_log
+    @apache.parse_log
   end
 end
+
+ApacheLookup.run(ARGV[0], ARGV[1])if $0 == __FILE__

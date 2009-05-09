@@ -2,12 +2,12 @@ require "test/unit"
 require "apache_lookup"
 
 # Mocking Resolv.getname
-# class Resolv
-#   alias :getname_orig :getname
-#   def self.getname ip
-#     ip.gsub('.', '') + '.com'
-#   end
-# end
+class Resolv
+  alias :getname_orig :getname
+  def self.getname ip
+    ip.gsub('.', '') + '.com'
+  end
+end
 
 # Add accessors so we can verify info in tests
 class ApacheLookup
@@ -16,11 +16,11 @@ end
 
 class TestApacheLookup < Test::Unit::TestCase
   def setup
-    @test_log = StringIO.new(File.read('./test/test_log.txt'))
+    @test_log = StringIO.new(File.read('./test/small_log.txt'))
     @test_line = '208.77.188.166 - - [29/Apr/2009:16:07:38 -0700] "GET / HTTP/1.1" 200 1342'
     cache = YAML.load_file('test/cache.yml')
 
-    @apache = ApacheLookup.new cache
+    @apache = ApacheLookup.new cache, './test/small_log.txt'
     # @test_log.each_line {|line| puts "#{@test_log.lineno}: #{line}"}
   end
 
@@ -83,7 +83,7 @@ class TestApacheLookup < Test::Unit::TestCase
 
   def test_parses_log
     @apache.read_log @test_log
-    @apache.parse_log 3
+    @apache.parse_log 2
 
     expected = ['20877188166.com - - [29/Apr/2009:16:07:38 -0700] "GET / HTTP/1.1" 200 1342',
                 '75119201189.com - - [29/Apr/2009:16:07:44 -0700] "GET /favicon.ico HTTP/1.1" 200 1406']
