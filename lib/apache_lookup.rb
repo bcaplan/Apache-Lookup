@@ -32,11 +32,13 @@ class ApacheLookup
 
   def parse_line line
     line =~ IP_REGEX
-    line.gsub($1, resolve_ip($1))
+    line.gsub!($1, resolve_ip($1))
   end
   
   def parse_log
-    
+    @log_lines.each do |line|
+      parse_line line
+    end
   end
 
   def self.run
